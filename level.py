@@ -6,6 +6,7 @@ from support import *
 from weapon import Weapon
 from random import choice
 from ui import *
+from enemy import *
 
 class Level:
     def __init__(self):
@@ -30,7 +31,8 @@ class Level:
         layouts = {
            'boundary': import_csv_layout('map\map_FloorBlocks.csv'),
            'grass': import_csv_layout('map\map_Grass.csv'),
-           'object': import_csv_layout('map\map_Objects.csv')
+           'object': import_csv_layout('map\map_Objects.csv'),
+           'entities': import_csv_layout('map\map_Entities.csv')
        }
         
         graphics = {
@@ -53,11 +55,26 @@ class Level:
                         if style == 'object':
                             surf = graphics['objects'][int(col)]
                             Tile((x,y),[self.visible_sprites,self.obstacle_sprites],'object',surf)
-
-        self.player = Player((2100,1400),[self.visible_sprites],self.obstacle_sprites,self.create_attack,self.destroy_attack)
+                        if style == 'entities':
+                            if col == '394': #ID from tileset (csv)
+                                self.player = Player(
+                                    (x,y),
+                                    self.visible_sprites,
+                                    self.obstacle_sprites,
+                                    self.create_attack,
+                                    self.destroy_attack,
+                                    self.create_magic
+                                    )
+                            else:
+                                Enemy('Monster',(x,y),[self.visible_sprites,self.obstacle_sprites])
 
     def create_attack(self):
         self.current_attack = Weapon(self.player,[self.visible_sprites])
+
+    def create_magic(self,style,stregth,cost):
+        print(style)
+        print(stregth)
+        print(cost)
 
     def destroy_attack(self):
         if self.current_attack:
