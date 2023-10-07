@@ -11,7 +11,7 @@ class Game:
         pygame.display.set_caption('IDM RPG')
         self.clock = pygame.time.Clock()
 
-        self.level = Level()
+        self.level = Level()     
 
     def run(self):
         while True:
@@ -20,7 +20,7 @@ class Game:
                     pygame.quit()
                     sys.exit()
             
-            self.screen.fill('black')
+            self.screen.fill('blue')
             self.level.run()
             pygame.display.update()
             self.clock.tick(FPS)
