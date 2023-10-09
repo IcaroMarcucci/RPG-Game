@@ -11,7 +11,12 @@ class Game:
         pygame.display.set_caption('IDM RPG')
         self.clock = pygame.time.Clock()
 
-        self.level = Level()     
+        self.level = Level()    
+
+        #Sound
+        main_sound = pygame.mixer.Sound('audio/main.ogg')
+        main_sound.set_volume(0.1)
+        main_sound.play(loops = -1)
 
     def run(self):
         while True:
@@ -19,6 +24,9 @@ class Game:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_m:
+                        self.level.toggle_menu()
             
             self.screen.fill(WATER_COLOR)
             self.level.run()

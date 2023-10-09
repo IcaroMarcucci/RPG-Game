@@ -8,7 +8,7 @@ class Player(Entity):
         super().__init__(groups)
         self.image = pygame.image.load('../RPG-Game/graphics/test/player.png').convert_alpha()
         self.rect = self.image.get_rect(topleft = pos)
-        self.hitbox = self.rect.inflate(0, -20)
+        self.hitbox = self.rect.inflate(-6,HITBOX_OFFSET['player'])
 
         #Animation Setup
         self.import_player_assets()
@@ -16,7 +16,7 @@ class Player(Entity):
 
         #Movement
         self.attacking = False
-        self.attack_cooldown = 400
+        self.attack_cooldown = 600
         self.attack_time = None
         self.obstacle_sprites = obstacle_sprites
 
@@ -39,15 +39,21 @@ class Player(Entity):
 
         #Stats
         self.stats = {'health': 100, 'energy': 60, 'attack': 10, 'magic': 4, 'speed': 6}
+        self.max_stats = {'health': 300, 'energy': 140, 'attack': 20, 'magic': 10, 'speed': 12}
+        self.upgrade_cost = {'health': 100, 'energy': 100, 'attack': 100, 'magic': 100, 'speed': 100}
         self.health = self.stats['health']
         self.energy = self.stats['energy']
         self.speed = self.stats['speed']
-        self.exp = 123
+        self.exp = 0
 
         #Damage Timer
         self.vulnerable = True
         self.hurt_time = None
         self.invulnerability_duration = 500
+
+        #Import Sound
+        self.weapon_attack_sound = pygame.mixer.Sound('audio/sword.wav')
+        self.weapon_attack_sound.set_volume(0.2)
 
     def import_player_assets(self):
         character_path = 'graphics/player/'
@@ -63,31 +69,33 @@ class Player(Entity):
     def input(self):
         if not self.attacking:
             keys = pygame.key.get_pressed()
+            mouse_pressed = pygame.mouse.get_pressed()
 
             #Movement Inputs
-            if keys[pygame.K_UP] or keys[pygame.K_w]:
+            if keys[pygame.K_w]:
                 self.direction.y = -1
                 self.status = 'up'
-            elif keys[pygame.K_DOWN] or keys[pygame.K_s]:
+            elif keys[pygame.K_s]:
                 self.direction.y = 1
                 self.status = 'down'
             else:
                 self.direction.y = 0
 
-            if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+            if keys[pygame.K_d]:
                 self.direction.x = 1
                 self.status = 'right'
-            elif keys[pygame.K_LEFT] or keys[pygame.K_a]:
+            elif keys[pygame.K_a]:
                 self.direction.x = -1
                 self.status = 'left'
             else:
                 self.direction.x = 0
 
             #Attack Inputs
-            if keys[pygame.K_SPACE]:
-                self.attacking = True
-                self.attack_time = pygame.time.get_ticks()
-                self.create_attack()
+            if (mouse_pressed[0]):
+                    self.attacking = True
+                    self.attack_time = pygame.time.get_ticks()
+                    self.create_attack()
+                    self.weapon_attack_sound.play()
 
             #Swap Weapon
             if keys[pygame.K_TAB] and self.can_switch_weapon:
@@ -102,7 +110,7 @@ class Player(Entity):
                 self.weapon = list(weapon_data.keys())[self.weapon_index]
 
             #Magic Inputs
-            if keys[pygame.K_LALT]:
+            if (mouse_pressed[2]):
                 self.attacking = True
                 self.attack_time = pygame.time.get_ticks()
                 style = list(magic_data.keys())[self.magic_index]
@@ -143,8 +151,8 @@ class Player(Entity):
         current_time = pygame.time.get_ticks()
         if self.attacking:
             if current_time - self.attack_time >= self.attack_cooldown + weapon_data[self.weapon]['cooldown']:
-                self.attacking = False
                 self.destroy_attack()
+                self.attacking = False
 
         if not self.can_switch_weapon:
             if current_time - self.weapon_switch_time >= self.switch_duration_cooldown:
@@ -186,6 +194,12 @@ class Player(Entity):
         spell_damage = magic_data[self.magic]['stregth']
         return base_damage + spell_damage
 
+    def get_value_by_index(self,index):
+        return list(self.stats.values())[index]
+    
+    def get_cost_by_index(self,index):
+        return list(self.upgrade_cost.values())[index]
+
     def energy_recovery(self):
         if self.energy < self.stats['energy']:
             self.energy += 0.005 * (self.stats['magic'])
@@ -197,5 +211,5 @@ class Player(Entity):
         self.cooldowns()
         self.get_status()
         self.animate()
-        self.move(self.speed)
+        self.move(self.stats['speed'])
         self.energy_recovery()
